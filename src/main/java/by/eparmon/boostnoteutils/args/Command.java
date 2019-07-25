@@ -4,7 +4,7 @@ import by.eparmon.boostnoteutils.exception.BoostException;
 
 public enum Command {
 
-    ;
+    INIT("init");
 
     private String name;
 

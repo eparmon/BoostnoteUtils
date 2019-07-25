@@ -3,7 +3,7 @@ package by.eparmon.boostnoteutils;
 import by.eparmon.boostnoteutils.args.Flag;
 import by.eparmon.boostnoteutils.exception.BoostException;
 import by.eparmon.boostnoteutils.args.Command;
-import by.eparmon.boostnoteutils.help.Help;
+import by.eparmon.boostnoteutils.service.HelpService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +39,6 @@ public class BoostnoteUtils {
 
     private static void runCommand() {
         if (flags.contains(Flag.HELP))
-            Help.showHelpMessage(command);
+            HelpService.showHelpMessage(command);
     }
 }
