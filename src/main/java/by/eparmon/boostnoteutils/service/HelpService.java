@@ -1,6 +1,6 @@
 package by.eparmon.boostnoteutils.service;
 
-import by.eparmon.boostnoteutils.args.Command;
+import by.eparmon.boostnoteutils.enums.Command;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;

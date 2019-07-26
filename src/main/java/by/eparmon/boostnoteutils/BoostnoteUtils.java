@@ -1,14 +1,17 @@
 package by.eparmon.boostnoteutils;
 
-import by.eparmon.boostnoteutils.args.Flag;
+import by.eparmon.boostnoteutils.enums.Command;
+import by.eparmon.boostnoteutils.enums.Flag;
 import by.eparmon.boostnoteutils.exception.BoostException;
-import by.eparmon.boostnoteutils.args.Command;
 import by.eparmon.boostnoteutils.service.HelpService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BoostnoteUtils {
+
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static Command command;
     private static List<Flag> flags = new ArrayList<>();
@@ -40,5 +43,7 @@ public class BoostnoteUtils {
     private static void runCommand() {
         if (flags.contains(Flag.HELP))
             HelpService.showHelpMessage(command);
+        else
+            command.run();
     }
 }

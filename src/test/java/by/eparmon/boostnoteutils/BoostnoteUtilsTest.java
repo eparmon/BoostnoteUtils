@@ -18,4 +18,9 @@ public class BoostnoteUtilsTest {
     public void help() {
         BoostnoteUtils.main("--help");
     }
+
+    @Test
+    public void scan() {
+        BoostnoteUtils.main("scan");
+    }
 }

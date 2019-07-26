@@ -1,10 +1,11 @@
-package by.eparmon.boostnoteutils.args;
+package by.eparmon.boostnoteutils.enums;
 
 import by.eparmon.boostnoteutils.exception.BoostException;
+import by.eparmon.boostnoteutils.service.NotesService;
 
 public enum Command {
 
-    INIT("init");
+    SCAN("scan");
 
     private String name;
 
@@ -21,5 +22,15 @@ public enum Command {
             if (command.name.equals(name))
                 return command;
         throw new BoostException("unknown command: '" + name + "'.\nTry 'boost --help' for the list of valid commands.\n");
+    }
+
+    public void run() {
+        switch (this) {
+            case SCAN:
+                NotesService.scanNotes();
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 }

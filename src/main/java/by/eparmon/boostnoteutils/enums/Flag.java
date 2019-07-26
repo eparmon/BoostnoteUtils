@@ -1,4 +1,4 @@
-package by.eparmon.boostnoteutils.args;
+package by.eparmon.boostnoteutils.enums;
 
 import by.eparmon.boostnoteutils.exception.BoostException;
 
