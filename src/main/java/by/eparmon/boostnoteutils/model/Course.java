@@ -9,9 +9,9 @@ import java.util.Collection;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Folder {
+public class Course {
 
-    private String key;
     private String title;
-    private Collection<Note> notes;
+    private String url;
+    private Collection<String> topics;
 }

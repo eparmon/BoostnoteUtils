@@ -9,13 +9,17 @@ import java.util.stream.Collectors;
 public class FileHelper {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void createFileIfNotExists(String path) {
+    public static File createFileIfNotExists(String path) {
+        File file = new File(path);
         try {
-            new File(path.substring(0, path.lastIndexOf('/'))).mkdirs();
-            new File(path).createNewFile();
+            int separator = path.lastIndexOf('/');
+            if (separator != -1)
+                new File(path.substring(0, separator)).mkdirs();
+            file.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return file;
     }
 
     public static List<String> getLines(File file) {
