@@ -1,17 +1,27 @@
 package by.eparmon.boostnoteutils.service;
 
-import by.eparmon.boostnoteutils.BoostnoteUtils;
 import by.eparmon.boostnoteutils.cson.CsonParser;
+import by.eparmon.boostnoteutils.enums.Colour;
 import by.eparmon.boostnoteutils.enums.Configuration;
+import by.eparmon.boostnoteutils.file.FileHelper;
 import by.eparmon.boostnoteutils.model.Folder;
 import by.eparmon.boostnoteutils.model.Note;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static by.eparmon.boostnoteutils.BoostnoteUtils.OBJECT_MAPPER;
+import static by.eparmon.boostnoteutils.BoostnoteUtils.SCANNER;
 
 public class NotesService {
 
@@ -23,6 +33,71 @@ public class NotesService {
     private static File boostnoteNotesDirectory;
 
     private static Map<String, Folder> folders = new HashMap<>();
+
+    static Folder createFolder(String title, Colour colour) {
+        Folder folder = Folder.builder()
+                .key(generateKey())
+                .title(title)
+                .notes(Collections.emptySet())
+                .build();
+        determineBoostnoteHomePath();
+        JsonNode boostnoteJson = parseBoostnoteJson();
+        ArrayNode folders = (ArrayNode) boostnoteJson.get("folders");
+        folders.add(OBJECT_MAPPER.createObjectNode()
+                .put("key", folder.getKey())
+                .put("name", folder.getTitle())
+                .put("color", colour.getCode()));
+        saveBoostnoteJson(boostnoteJson);
+        return folder;
+    }
+
+    private static String generateKey() {
+        StringBuilder key = new StringBuilder();
+        for (int i = 0; i < 20; i++)
+            key.append(Integer.toHexString((int) (Math.random() * 16)));
+        return key.toString();
+    }
+
+    static Note createNote(String title,
+                           Folder folder,
+                           boolean isStarred,
+                           boolean isPinned,
+                           Collection<String> tags) {
+        Note note = Note.builder()
+                .title(title)
+                .folder(folder)
+                .isStarred(isStarred)
+                .isPinned(isPinned)
+                .tags(tags)
+                .content("# " + title)
+                .build();
+        determineBoostnoteHomePath();
+        File file = FileHelper.createFileIfNotExists(boostnoteNotesDirectory + "/" + UUID.randomUUID() + ".cson");
+        String now = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
+        try (PrintWriter writer = new PrintWriter(file)) {
+            writer.println("createdAt: \"" + now + "\"");
+            writer.println("updatedAt: \"" + now + "\"");
+            writer.println("type: \"MARKDOWN_NOTE\"");
+            writer.println("folder: \"" + folder.getKey() + "\"");
+            writer.println("title: \"" + note.getTitle() + "\"");
+            writer.println("tags: [");
+            tags.forEach(tag -> writer.println("  \"" + tag + "\""));
+            writer.println("]");
+            writer.println("content: '''");
+            writer.println("  # " + note.getTitle());
+            writer.println("---");
+            writer.println("[//]: # (Curriculum start)");
+            writer.println("[//]: # (Curriculum end)");
+            writer.println("'''");
+            writer.println("linesHighlighted: []");
+            writer.println("isStarred: true");
+            writer.println("isPinned: true");
+            writer.println("isTrashed: false");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return note;
+    }
 
     public static void scanNotes() {
         determineBoostnoteHomePath();
@@ -37,7 +112,7 @@ public class NotesService {
         setBoostnoteHomePath(assumedBoostnoteHomePath);
         while (boostnoteHomePathIsInvalid()) {
             System.out.print("Could not find the Boostnote home directory. Please, enter the path to it: ");
-            setBoostnoteHomePath(new Scanner(System.in).nextLine());
+            setBoostnoteHomePath(SCANNER.nextLine());
         }
     }
 
@@ -64,16 +139,28 @@ public class NotesService {
             String key = folderNode.get("key").asText();
             folders.put(key, Folder.builder()
                     .key(key)
-                    .color(folderNode.get("color").asText())
-                    .name(folderNode.get("name").asText())
+                    .title(folderNode.get("name").asText())
                     .notes(new HashSet<>())
                     .build());
         }
     }
 
     private static Iterable<? extends JsonNode> parseFolders() {
+        return parseBoostnoteJson().get("folders");
+    }
+
+    private static JsonNode parseBoostnoteJson() {
         try {
-            return BoostnoteUtils.OBJECT_MAPPER.readTree(boostnoteJson).get("folders");
+            return OBJECT_MAPPER.readTree(boostnoteJson);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void saveBoostnoteJson(JsonNode newJson) {
+        try (PrintWriter writer = new PrintWriter(boostnoteJson)) {
+            Object json = OBJECT_MAPPER.readValue(newJson.toString(), Object.class);
+            writer.println(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
